@@ -1,0 +1,1336 @@
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+
+local player = game.Players.LocalPlayer
+local character = player.Character
+local humanoid = character:FindFirstChildOfClass("Humanoid")
+local HMNRT = character:FindFirstChild("HumanoidRootPart")
+local Camera = workspace.CurrentCamera
+local plrGui = player.PlayerGui
+
+local ScreenGui = Instance.new("ScreenGui");
+ScreenGui.Parent = plrGui
+
+local Loading_Finish = false ; local PlayerFarm = nil ; local Icon_Position = nil
+
+task.spawn(function()---------------------Find Player Farm Place
+	if PlayerFarm == nil then
+		local Farms = workspace:FindFirstChild("Farm")
+		if Farms then
+			repeat
+				for _, Farm in ipairs(Farms:GetChildren()) do
+					if Farm:FindFirstChild("Important") and Farm:FindFirstChild("Important"):FindFirstChild("Data") then
+						local FarmData = Farm:FindFirstChild("Important"):FindFirstChild("Data")
+						if FarmData:FindFirstChild("Owner") then
+							local OwnerFarm = FarmData:FindFirstChild("Owner").Value							
+							if OwnerFarm == player.Name then
+								PlayerFarm = Farm; print("!! Found Player Farm !!")
+							end
+						end
+					end
+				end
+				wait(0.5)
+			until PlayerFarm ~= nil
+		end		
+	end
+end)
+
+local function formatMoney(value)
+	if value >= 1e15 then
+		return string.format("%.1fQ", value / 1e15)
+	elseif value >= 1e12 then
+		return string.format("%.1fT", value / 1e12)
+	elseif value >= 1e9 then
+		return string.format("%.1fB", value / 1e9)
+	elseif value >= 1e6 then
+		return string.format("%.1fM", value / 1e6)
+	elseif value >= 1e3 then
+		return string.format("%.1fk", value / 1e3)
+	else
+		return tostring(value)
+	end
+end
+
+local Hotbars = plrGui:FindFirstChild("BackpackGui"):FindFirstChild("Backpack"):FindFirstChild("Hotbar")
+local Inventory = plrGui:FindFirstChild("BackpackGui"):FindFirstChild("Backpack"):FindFirstChild("Inventory")
+local Inventory_Player = Inventory:FindFirstChild("ScrollingFrame"):FindFirstChild("UIGridFrame")
+local Modules_CalculatePlant = require(replicatedStorage.Modules.CalculatePlantValue)
+
+local function HideSellCost(Folder)
+	for _, Frame in ipairs(Folder:GetChildren()) do
+		if Frame:IsA("TextButton") then
+			if Frame:FindFirstChild("Somtank_Much") then
+				Frame:FindFirstChild("Somtank_Much"):Destroy()
+			end
+		end
+	end
+end
+local function ShowSellCost(Folder)
+	for _, Frame in ipairs(Folder:GetChildren()) do
+		if Frame:IsA("TextButton") then
+			if not Frame:FindFirstChild("Somtank_Much") then
+				local NewText = Instance.new("TextLabel", Frame)
+				NewText.Name = "Somtank_Much"
+				local UIStroke = Instance.new("UIStroke", NewText)
+				local Tool = nil
+				UIStroke.Thickness = 3
+				UIStroke.Color = Color3.fromRGB(10, 10, 26)
+				if Frame:FindFirstChild("ToolName") then
+					local Tool_Name = Frame:FindFirstChild("ToolName").Text
+					if player.Backpack:FindFirstChild(Tool_Name) then
+						Tool = player.Backpack:FindFirstChild(Tool_Name)
+					end
+				end
+				if Tool ~= nil then
+					local money = formatMoney(Modules_CalculatePlant(Tool))
+					NewText.BackgroundTransparency = 1
+					NewText.Position = UDim2.new(0,0,0,44)
+					NewText.Size = UDim2.new(0,60,0,15)
+					NewText.TextColor3 = Color3.fromRGB(135, 66, 255)
+					NewText.RichText = true
+					NewText.Text = "ราคา <b><font color='rgb(0,255,0)'>" .. money .. "</font></b>"
+					if Modules_CalculatePlant(Tool) == 0 then
+						NewText:Destroy()
+					end
+				else
+					NewText:Destroy()
+				end
+				if NewText.Text == "Label" then
+					NewText:Destroy()
+				end
+			end
+		end
+	end
+end
+
+local function MakeDraggableButton(button: ImageButton, MoveFrame)
+	local dragging = false;	local dragStart
+	local startPos;	local firstPos
+	button.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			Icon_Position = button.Position
+			startPos = MoveFrame.Position
+			if not firstPos then
+				firstPos = MoveFrame.Position
+			end
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+			local delta = input.Position - dragStart
+			MoveFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			if input.UserInputType == Enum.UserInputType.Touch then
+				Camera.CameraType = Enum.CameraType.Scriptable
+			end
+		end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+			Camera.CameraType = Enum.CameraType.Custom
+		end
+	end)
+end
+
+local function createSlider(sliderTrack, sliderThumb, onSlide, MaxValue)
+	local dragging = false
+	MaxValue = MaxValue or 100
+	local function getSliderRange()
+		return sliderTrack.AbsoluteSize.X - sliderThumb.AbsoluteSize.X
+	end
+	local function tweenSliderTo(xPos)
+		local maxX = getSliderRange()
+		xPos = math.clamp(xPos, 0, maxX)
+		local goal = {Position = UDim2.new(0, xPos, sliderThumb.Position.Y.Scale, sliderThumb.Position.Y.Offset)}
+		local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+		TweenService:Create(sliderThumb, tweenInfo, goal):Play()
+		if typeof(onSlide) == "function" then
+			local percent = xPos / maxX
+			local value = math.floor(percent * MaxValue + 0.5)
+			onSlide(value)
+		end
+	end
+	sliderTrack.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			local relativeX = input.Position.X - sliderTrack.AbsolutePosition.X - sliderThumb.AbsoluteSize.X / 2
+			tweenSliderTo(relativeX)
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local relativeX = input.Position.X - sliderTrack.AbsolutePosition.X - sliderThumb.AbsoluteSize.X / 2
+			tweenSliderTo(relativeX)
+		end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+	local function setSliderByValue(value)
+		value = math.clamp(value, 0, MaxValue)
+		local maxX = getSliderRange()
+		local xPos = (value / MaxValue) * maxX
+		sliderThumb.Position = UDim2.new(0, xPos, sliderThumb.Position.Y.Scale, sliderThumb.Position.Y.Offset)
+	end
+	return {SetValue = setSliderByValue}
+end
+
+local function rotateImageButton(imageButton, duration)
+	local tweenInfo = TweenInfo.new(duration,Enum.EasingStyle.Sine,	Enum.EasingDirection.Out,0,false)
+	local goal = {Rotation = 360}
+	local tween = TweenService:Create(imageButton, tweenInfo, goal)
+	tween:Play()
+end
+
+local function tweenButtonColor(button, color, time, Image)
+	local tweenInfo = TweenInfo.new(time or 0.2,Enum.EasingStyle.Sine,Enum.EasingDirection.Out)
+	local goal
+	if Image and Image == true then
+		goal = {ImageColor3 = color}
+	else
+		goal = {BackgroundColor3 = color}
+	end	
+	TweenService:Create(button, tweenInfo, goal):Play()
+end
+
+local function tweenFrameSize(frame, newSize, time)
+	local tweenInfo = TweenInfo.new(time or 0.2,Enum.EasingStyle.Sine,Enum.EasingDirection.Out)
+	local goal = {Size = newSize}
+	TweenService:Create(frame, tweenInfo, goal):Play()
+end
+
+local function tweenFramePosition(frame, newPosition, time)
+	local tweenInfo = TweenInfo.new(time or 0.2,Enum.EasingStyle.Sine,Enum.EasingDirection.Out)
+	local goal = {Position = newPosition}
+	TweenService:Create(frame, tweenInfo, goal):Play()
+end
+
+task.spawn(function()
+	local fullText = ">>> SOMTANK-Script <<<" ; local windowSize = 6
+	while true do
+		for i = 1, #fullText - windowSize + 1 do
+			local view = fullText:sub(i, i + windowSize - 1)
+			ScreenGui.Name = view
+			wait(0.1)
+		end
+	end
+end)
+
+local function MakeTextButton(Parent, Size, Posi, BGtran, Color, Text)
+	local NewFrame = Instance.new("TextButton", Parent)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Text = Text
+	NewFrame.TextScaled = true
+	NewFrame.TextColor3 = Color
+	NewFrame.Font = Enum.Font.Highway
+	return NewFrame
+end
+
+local function MakeImageButton(Parent, Size, Posi, BGtran, Color, Imtran, imageID)
+	local NewFrame = Instance.new("ImageButton", Parent)
+	local UICorner = Instance.new("UICorner", NewFrame)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Image = imageID or ""
+	NewFrame.ImageTransparency = Imtran
+	NewFrame.BackgroundColor3 = Color
+	NewFrame.ImageColor3 = Color
+	NewFrame.ZIndex = 2
+	return NewFrame
+end
+
+local function MakeText(Parent, Size, Posi, BGtran, Color, Visible, Text)
+	local NewFrame = Instance.new("TextLabel", Parent)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size	
+	NewFrame.TextColor3 = Color
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Visible = Visible
+	NewFrame.Text = Text
+	NewFrame.TextScaled = true
+	NewFrame.Font = Enum.Font.Highway
+	return NewFrame
+end
+
+local function MakeFrame(Parent, Size, Posi, BGtran, Color, Visible, UiConner)
+	local NewFrame = Instance.new("Frame", Parent)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size	
+	NewFrame.BackgroundColor3 = Color
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Visible = Visible
+	if UiConner and UiConner == true then
+		local NewUiConner = Instance.new("UICorner", NewFrame)
+		NewUiConner.CornerRadius = UDim.new(0, 7)
+	end	
+	return NewFrame
+end
+
+local function MakeScrolling(Parent, Size, Posi, BGtran, Color, Visible)
+	local NewFrame = Instance.new("ScrollingFrame", Parent)
+	local UIListLayout = Instance.new("UIListLayout", NewFrame)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size
+	NewFrame.BackgroundColor3 = Color
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Visible = Visible
+	NewFrame.ScrollBarThickness = 0
+	UIListLayout.Padding = UDim.new(0,7)
+	return NewFrame
+end
+
+local function MakeImageLabel(Parent, Size, Posi, BGtran, Color, Imtran, ImageID)
+	local NewFrame = Instance.new("ImageLabel", Parent)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.Image = ImageID
+	NewFrame.ImageTransparency = Imtran
+	NewFrame.ImageColor3 = Color
+	return NewFrame
+end
+
+local function MakeTextBox(Parent, Size, Posi, BGtran, Color , Text)
+	local NewFrame = Instance.new("TextBox", Parent)
+	NewFrame.Position = Posi
+	NewFrame.Size = Size
+	NewFrame.BackgroundTransparency = BGtran
+	NewFrame.PlaceholderText = Text
+	NewFrame.PlaceholderColor3 = Color
+	NewFrame.TextColor3 = Color
+	NewFrame.TextScaled = true
+	NewFrame.Text = ""
+	NewFrame.Font = Enum.Font.Highway
+	return NewFrame
+end
+
+local MainFrame = MakeFrame(ScreenGui, UDim2.new(0, 417,0, 299)
+	, UDim2.new(0.246, 0,0.100, 0), 0
+	, Color3.new(1, 1, 1), true, true)
+
+local MovePad = MakeImageLabel(MainFrame, UDim2.new(0, 344,0, 43)
+	, UDim2.new(0, 0,0, 0), 1
+	, Color3.new(1, 1, 1), 0, "")
+
+local SelectMode = MakeScrolling(MainFrame, UDim2.new(0, 193,0, 247)
+	, UDim2.new(-0.101, 0,0.144, 0), 1
+	, Color3.new(0.0980392, 0.0745098, 0.219608), true, true)
+SelectMode.Name = "SelectMode"
+
+local Line = MakeFrame(MainFrame, UDim2.new(0, 3,0, 247), UDim2.new(0.37, 0,0.144, 0), 0, Color3.new(1, 1, 1), true, true)
+task.spawn(function()
+	local gradient = Instance.new("UIGradient", Line); gradient.Rotation = 90; gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(106, 20, 255)), 	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(187, 147, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(106, 20, 255))}
+	while wait() do
+		if gradient.Offset.Y < 1 then
+			gradient.Offset += Vector2.new(0, 0.04)
+		else
+			gradient.Offset = Vector2.new(0, -1)
+		end
+	end
+end)
+
+local Close_EYE = MakeTextButton(MainFrame, UDim2.new(0, 26,0, 24)
+	, UDim2.new(0.825, 0,0.013, 0), 1
+	, Color3.new(0.466667, 0.113725, 1), "-")
+
+local Close_Panal = MakeTextButton(MainFrame, UDim2.new(0, 26,0, 24)
+	, UDim2.new(0.921, 0,0.013, 0), 1
+	, Color3.new(0.466667, 0.113725, 1), "X")
+
+Close_EYE.Activated:Connect(function()
+	MainFrame.Visible = false
+end)
+
+Close_Panal.Activated:Connect(function()
+	local ByeSound = Instance.new("Sound", game.SoundService)
+	ByeSound.SoundId = "rbxassetid://154157386"
+	ByeSound:Play()
+	ByeSound.Name = "ByeSound_" .. player.Name
+	ScreenGui:Destroy()
+end)
+
+local LoadingFrame = MakeFrame(MainFrame, UDim2.new(0, 417,0, 299), UDim2.new(0, 0,0, 0), 0, Color3.new(0.0980392, 0.0745098, 0.219608), true, true)
+local LoadingBar1 = MakeFrame(LoadingFrame, UDim2.new(0, 253,0, 11), UDim2.new(0.197, 0,0.807, 0), 0, Color3.new(0.0509804, 0.0392157, 0.117647), true, true)
+local LoadingBar2 = MakeFrame(LoadingFrame, UDim2.new(0, 0,0, 11), UDim2.new(0.197, 0,0.807, 0), 0, Color3.new(0.368627, 0.286275, 0.854902), true, true)
+local LoadingText = MakeText(LoadingFrame, UDim2.new(0, 203,0, 20), UDim2.new(0.252, 0,0.711, 0), 1, Color3.new(0.513725, 0.286275, 1), true, "ยินดีต้อนรับ " .. player.DisplayName)
+local LoadingIcon = MakeImageLabel(LoadingFrame, UDim2.new(0, 130,0, 128), UDim2.new(0.343, 0,0.257, 0), 1, Color3.new(1, 1, 1), 0, "rbxassetid://80019916158199")
+local gradient_IconLoad = Instance.new("UIGradient", LoadingIcon); gradient_IconLoad.Rotation = 45; gradient_IconLoad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(111, 28, 255)), 	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(163, 135, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(111, 28, 255))}
+LoadingFrame.ZIndex = 2;LoadingBar1.ZIndex = 3;LoadingBar2.ZIndex = 4;LoadingText.ZIndex = 3;LoadingIcon.ZIndex = 3; gradient_IconLoad.Offset = Vector2.new(0, -1.5)
+task.spawn(function()
+	wait(1)
+	while wait(math.random(0.1,0.9)) do
+		if gradient_IconLoad then
+			if gradient_IconLoad.Offset.Y < 1.5 then
+				gradient_IconLoad.Offset += Vector2.new(0, 0.05)
+			end
+		end
+	end
+end)
+task.spawn(function()
+	local Loading_Studs = 0
+	wait(1.8)
+	while wait(math.random(0.1,0.9)) do
+		if Loading_Studs >= 249 then
+			Loading_Finish = true
+			tweenFrameSize(LoadingBar1, UDim2.new(0, 253,0, 0), 0.8)
+			tweenFrameSize(LoadingBar2, UDim2.new(0, Loading_Studs,0, 0), 1.2)
+			tweenFrameSize(LoadingText, UDim2.new(0, 203,0, 0), 1.2)
+			tweenFrameSize(LoadingIcon, UDim2.new(0, 130,0, 0), 0.3)			
+			tweenFrameSize(LoadingFrame, UDim2.new(0, 417,0, 0), 1.2)
+			wait(1.4)
+			LoadingFrame:Destroy()
+		else
+			Loading_Studs = Loading_Studs + math.random(1,10)
+			tweenFrameSize(LoadingBar2, UDim2.new(0, 0 + Loading_Studs,0, 11), 0.2)
+		end
+		if Loading_Studs >= 120 then
+			LoadingText.Text = "ขอบคุณที่ใช้สคริปค้าบ"
+		end
+	end
+end)
+
+local IconFrame = MakeImageLabel(MainFrame, UDim2.new(0, 32,0, 31), UDim2.new(0.017, 0,0.013, 0), 1, Color3.new(0.435294, 0.109804, 1), 0, "rbxassetid://80019916158199")
+local TitleText = MakeText(MainFrame, UDim2.new(0, 112,0, 32), UDim2.new(0.118, 0,0.013, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "Somtank")
+local VersionText = MakeText(MainFrame, UDim2.new(0, 163,0, 20), UDim2.new(0.41, 0,0.054, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "V0.0.1")
+local FOR_ICON = Instance.new("UIAspectRatioConstraint", IconFrame)
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+VersionText.TextXAlignment = Enum.TextXAlignment.Left
+VersionText.TextTransparency = 0.4
+
+local MoveIcon = MakeImageButton(ScreenGui, UDim2.new(0, 53,0, 51), UDim2.new(0.100, 0,0.447, 0), 1, Color3.new(1, 1, 1), 0, "rbxassetid://81129676934693")
+local FOR_MoveIcon = Instance.new("UIAspectRatioConstraint", MoveIcon)
+MakeDraggableButton(MoveIcon, MoveIcon)
+MakeDraggableButton(MovePad, MainFrame)
+MainFrame.BackgroundColor3 = Color3.new(0.0980392, 0.0745098, 0.219608)
+local FOR_MainFrame = Instance.new("UICorner", MainFrame)
+MoveIcon.Activated:Connect(function()
+	if Icon_Position == MoveIcon.Position then
+		if MainFrame.Visible == false then
+			MainFrame.Visible = true
+		else
+			MainFrame.Visible = false
+		end
+	end
+end)
+MoveIcon.MouseEnter:Connect(function()
+	MoveIcon.ImageColor3 = Color3.new(0.745098, 0.745098, 0.745098)
+end)
+MoveIcon.MouseLeave:Connect(function()
+	MoveIcon.ImageColor3 = Color3.new(1, 1, 1)
+end)
+
+local SelectMode_Now = MainFrame
+local function Create_ModeButton(Name)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 191,0, 36), UDim2.new(0, 0,0, 0), 1, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local BackgroundMain = MakeFrame(MainButton1, UDim2.new(0, 142,0, 36), UDim2.new(0.257, 0,0, 0), 0, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 118,0, 28), UDim2.new(0.338, 0,0.104, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 7,0, 36), UDim2.new(0.257, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local Button1 = MakeImageButton(MainButton1, UDim2.new(1, 0,1, 0), UDim2.new(0, 0,0, 0), 1, Color3.new(1, 1, 1), 1)
+	MainButton1.Visible = false
+	wait()
+	ColorMainButton1.Name = "ColorFrame"
+	local SelectFuntion = MakeScrolling(MainFrame, UDim2.new(0, 249,0, 247), UDim2.new(0.387, 0,0.144, 0), 1, Color3.new(0.0980392, 0.0745098, 0.219608), true, true)
+	SelectFuntion.Name = "SelectFuntion_" .. Name
+	SelectFuntion.Visible = false
+	Button1.Activated:Connect(function()
+		SelectMode_Now = MainButton1
+		for _, L in ipairs(SelectMode:GetChildren()) do
+			if L and L:IsA("Frame") and L:FindFirstChild("ColorFrame") then
+				local ColorFrame = L:FindFirstChild("ColorFrame")
+				ColorFrame.BackgroundColor3 = Color3.new(0.145098, 0.133333, 0.392157)
+			end
+		end
+		for _, B in ipairs(MainFrame:GetChildren()) do
+			if B and B:IsA("ScrollingFrame") and B.Name ~= "SelectMode" then
+				if B.Name ~= "SelectFuntion_" .. Name then
+					B.Visible = false
+				else
+					B.Visible = true
+				end				
+			end
+		end
+		tweenButtonColor(ColorMainButton1, Color3.new(0.45098, 0, 1), 0.17)
+	end)
+	local NewHoldSize = 5
+	Button1.MouseEnter:Connect(function()
+		if Loading_Finish == true then
+			tweenFrameSize(MainButton1, UDim2.new(0, 191,0, 36 + NewHoldSize), 0.3)
+			tweenFrameSize(ColorMainButton1, UDim2.new(0, 7,0, 36 + NewHoldSize), 0.5)
+			tweenFrameSize(TextMainButton1, UDim2.new(0, 131,0, 28 + NewHoldSize), 0.3)
+			tweenButtonColor(ColorMainButton1, Color3.new(0.364706, 0, 0.807843), 0.25)			
+			tweenFrameSize(BackgroundMain, UDim2.new(0, 191,0, 36 + NewHoldSize), 0.3)
+			tweenFramePosition(BackgroundMain, UDim2.new(0, 0,0, 0), 0.3)		
+			tweenFramePosition(ColorMainButton1, UDim2.new(0, 0,0, 0), 0.3)
+			tweenFramePosition(TextMainButton1, UDim2.new(0.18, 0,0.104, 0), 0.3)
+		end
+	end)
+	Button1.MouseLeave:Connect(function()
+		if Loading_Finish == true then
+			tweenFrameSize(MainButton1, UDim2.new(0, 144,0, 36), 0.3)
+			tweenFrameSize(ColorMainButton1, UDim2.new(0, 8,0, 36), 0.3)
+			tweenFrameSize(TextMainButton1, UDim2.new(0, 131,0, 28), 0.3)
+			tweenFrameSize(BackgroundMain, UDim2.new(0, 142,0, 36), 0.3)
+			tweenFramePosition(BackgroundMain, UDim2.new(0, 50,0, 0), 0.3)
+			tweenFramePosition(ColorMainButton1, UDim2.new(0.32, 0,0, 0), 0.3)
+			tweenFramePosition(TextMainButton1, UDim2.new(0.38, 0,0.104, 0), 0.3)
+			if SelectMode_Now and SelectMode_Now ~= MainButton1 then
+				tweenButtonColor(ColorMainButton1, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+			end
+		end	
+	end)	
+	MainButton1.Parent = SelectMode
+	MainButton1.Visible = true
+	return Button1 , SelectFuntion
+end
+
+-----   สร้างหมวดหหมู่  [ Create Mode ]
+
+local ModePlayer, ModePlayer_SelectFuntion = Create_ModeButton(" ผู้เล่น 👤 ")
+
+local ModeInterFace, ModeInterFace_SelectFuntion = Create_ModeButton(" อินเตอร์เฟซ 🌐 ")
+
+local ModeFarm, ModeFarm_SelectFuntion = Create_ModeButton(" ฟาร์ม 🌾 ")
+
+local ModeTeleport, ModeTeleport_SelectFuntion = Create_ModeButton(" เทเลพอร์ท 🌀 ")
+
+local ModeBuy, ModeBuy_SelectFuntion = Create_ModeButton(" ออโต้ซื้อ 💸 ")
+
+local ModeEventSummer, ModeEventSummer_SelectFuntion = Create_ModeButton(" อีเว้นท์ ☀️ ")
+
+
+---- End!!
+
+local function Create_Line(Parent, Name)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 248,0, 24), UDim2.new(0, 0,0, 0), 1, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0.916, 0,1, 0), UDim2.new(0.095, 0,-0.007, 0), 1, Color3.new(0.529412, 0.313725, 1), true, "<b> " .. Name .. " </b>")
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 16,0, 6), UDim2.new(0, 0,0.375, 0), 0, Color3.new(0.45098, 0, 1), true, true)
+	MainButton1.Visible = false
+	wait()
+	ColorMainButton1.Name = "Line_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	TextMainButton1.RichText = true
+	TextMainButton1.TextXAlignment = Enum.TextXAlignment.Left
+	return MainButton1
+end
+
+local function Create_Toggle(Parent, Name)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 248,0, 36), UDim2.new(0, 0,0, 0), 0, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 131,0, 28), UDim2.new(0.055, 0,0.076, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 8,0, 36), UDim2.new(0, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local Button1 = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 29), UDim2.new(0.86, 0,0.082, 0), 0, Color3.new(0.270588, 0.196078, 0.443137), 1)
+	MainButton1.Visible = false
+	Button1.Activated:Connect(function()
+		Button1.Active = false
+		if ColorMainButton1.BackgroundColor3 == Color3.new(0.45098, 0, 1) then
+			tweenButtonColor(ColorMainButton1, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+			tweenButtonColor(Button1, Color3.new(0.270588, 0.196078, 0.443137), 0.17)
+		else
+			tweenButtonColor(ColorMainButton1, Color3.new(0.45098, 0, 1), 0.17)
+			tweenButtonColor(Button1, Color3.new(0.45098, 0, 1), 0.17)
+		end
+		wait(0.2)
+		Button1.Active = true
+	end)	
+	wait()
+	ColorMainButton1.Name = "Toggle_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	return Button1, TextMainButton1
+end
+
+local function Create_Click(Parent, Name)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 248,0, 36), UDim2.new(0, 0,0, 0), 0, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 131,0, 28), UDim2.new(0.055, 0,0.076, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 8,0, 36), UDim2.new(0, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local Button1 = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 29), UDim2.new(0.86, 0,0.082, 0), 0, Color3.new(0.270588, 0.196078, 0.443137), 1)
+	MainButton1.Visible = false
+	Button1.Activated:Connect(function()
+		Button1.Active = false
+		ColorMainButton1.BackgroundColor3 = Color3.new(0.45098, 0, 1)
+		Button1.BackgroundColor3 = Color3.new(0.45098, 0, 1)		
+		tweenButtonColor(ColorMainButton1, Color3.new(0.145098, 0.133333, 0.392157), 0.4)
+		tweenButtonColor(Button1, Color3.new(0.270588, 0.196078, 0.443137), 0.4)
+		wait(0.2)
+		Button1.Active = true
+	end)	
+	wait()
+	ColorMainButton1.Name = "Click_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	return Button1, TextMainButton1
+end
+
+local function Create_SelectPick(Parent, Name, CanvasSize)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 248,0, 36), UDim2.new(0, 0,0, 0), 0, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 149,0, 28), UDim2.new(0.055, 0,0.02, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 8,0, 36), UDim2.new(0, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local Button1 = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 29), UDim2.new(0.86, 0,0.082, 0), 0, Color3.new(0.270588, 0.196078, 0.443137), 1)
+	local Scrolling = MakeScrolling(MainButton1, UDim2.new(0, 131,0, 0), UDim2.new(0.055, 0,0.076, 0), .75, Color3.new(0, 0, 0), true, false)
+	local ResetButton = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 28), UDim2.new(0.69, 0,0.019, 0), 1, Color3.new(0.580392, 0.388235, 1), 0, "rbxassetid://438217404")
+	ResetButton.Activated:Connect(function()
+		ResetButton.ImageColor3 = Color3.new(1, 1, 1)
+		ResetButton.Rotation = 0
+		tweenButtonColor(ResetButton, Color3.new(0.580392, 0.388235, 1), 0.7, true)		
+		rotateImageButton(ResetButton, 0.7)
+	end)	
+	MainButton1.Visible = false
+	Button1.Activated:Connect(function()
+		Button1.Active = false
+		if ColorMainButton1.BackgroundColor3 == Color3.new(0.45098, 0, 1) then
+			tweenButtonColor(ColorMainButton1, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+			tweenButtonColor(Button1, Color3.new(0.270588, 0.196078, 0.443137), 0.17)
+			Scrolling.Visible = false
+			tweenFramePosition(TextMainButton1, UDim2.new(0, 15,0, 3), 0.3)
+			tweenFramePosition(Button1, UDim2.new(0.86, 0,0.1, 0), 0.3)
+			tweenFrameSize(MainButton1, UDim2.new(0, 248,0, 36), 0.3)
+			tweenFrameSize(ColorMainButton1, UDim2.new(0, 8,0, 36), 0.3)
+			tweenFramePosition(Scrolling, UDim2.new(0.052, 0,0.22, 0), 0.3)
+			tweenFrameSize(Scrolling, UDim2.new(0, 228,0, 0), 0.3)
+		else
+			tweenButtonColor(ColorMainButton1, Color3.new(0.45098, 0, 1), 0.17)
+			tweenButtonColor(Button1, Color3.new(0.45098, 0, 1), 0.17)
+			Scrolling.Visible = true
+			tweenFramePosition(TextMainButton1, UDim2.new(0, 15,0, 3), 0.3)
+			tweenFramePosition(Button1, UDim2.new(0.86, 0,0.019, 0), 0.3)
+			tweenFrameSize(MainButton1, UDim2.new(0, 248,0, 183), 0.3)
+			tweenFrameSize(ColorMainButton1, UDim2.new(0, 8,0, 183), 0.3)
+			tweenFramePosition(Scrolling, UDim2.new(0.052, 0,0.23, 0), 0.3)			
+			tweenFrameSize(Scrolling, UDim2.new(0, 228,0, 132), 0.3)
+		end
+		wait(0.2)
+		Button1.Active = true
+	end)	
+	wait()
+	Scrolling.CanvasSize = UDim2.new(0, 0, CanvasSize, 0)
+	ColorMainButton1.Name = "SelectPick_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	local Info_Folder = Instance.new("Folder", MainButton1)	
+	return Scrolling, Info_Folder, ResetButton
+end
+
+local function Create_Click_InSC(Parent, Name)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 228,0, 33), UDim2.new(0, 0,0, 0), 0, Color3.new(0.164706, 0.152941, 0.443137), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 131,0, 28), UDim2.new(0.055, 0,0.076, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 8,0, 33), UDim2.new(0, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local Button1 = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 29), UDim2.new(0.86, 0,0.082, 0), 0, Color3.new(0.270588, 0.196078, 0.443137), 1)
+	MainButton1.Visible = false
+	Button1.Activated:Connect(function()
+		Button1.Active = false
+		ColorMainButton1.BackgroundColor3 = Color3.new(0.45098, 0, 1)
+		Button1.BackgroundColor3 = Color3.new(0.45098, 0, 1)		
+		tweenButtonColor(ColorMainButton1, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+		tweenButtonColor(Button1, Color3.new(0.270588, 0.196078, 0.443137), 0.17)
+		wait(0.2)
+		Button1.Active = true
+	end)	
+	wait()
+	ColorMainButton1.Name = "Click_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	return Button1, ColorMainButton1
+end
+
+local function Create_Toggle_InSC(Parent, Name)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 228,0, 33), UDim2.new(0, 0,0, 0), 0, Color3.new(0.164706, 0.152941, 0.443137), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 131,0, 28), UDim2.new(0.055, 0,0.076, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 8,0, 33), UDim2.new(0, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local Button1 = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 29), UDim2.new(0.86, 0,0.082, 0), 0, Color3.new(0.270588, 0.196078, 0.443137), 1)
+	MainButton1.Visible = false
+	Button1.Activated:Connect(function()
+		Button1.Active = false
+		if ColorMainButton1.BackgroundColor3 == Color3.new(0.45098, 0, 1) then
+			tweenButtonColor(ColorMainButton1, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+			tweenButtonColor(Button1, Color3.new(0.270588, 0.196078, 0.443137), 0.17)
+		else
+			tweenButtonColor(ColorMainButton1, Color3.new(0.45098, 0, 1), 0.17)
+			tweenButtonColor(Button1, Color3.new(0.45098, 0, 1), 0.17)
+		end
+		wait(0.2)
+		Button1.Active = true
+	end)	
+	wait()
+	ColorMainButton1.Name = "Toggle_InSC_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	return Button1, ColorMainButton1
+end
+
+local function Create_Slide_Textbox(Parent, Name, NameInTextBox, ValueNow)
+	local MainButton1 = MakeFrame(ScreenGui, UDim2.new(0, 248,0, 114), UDim2.new(0, 0,0, 0), 0, Color3.new(0.141176, 0.12549, 0.368627), true, true)
+	local TextMainButton1 = MakeText(MainButton1, UDim2.new(0, 131,0, 28), UDim2.new(0.055, 0,0.076, 0), 1, Color3.new(0.529412, 0.313725, 1), true, Name)
+	local TextBox = MakeTextBox(MainButton1, UDim2.new(0, 158,0, 29), UDim2.new(0.055, 0,0.673, 0), 1, Color3.new(0.596078, 0.32549, 1) , NameInTextBox)
+	local ColorMainButton1 = MakeFrame(MainButton1, UDim2.new(0, 8,0, 114), UDim2.new(0, 0,0, 0), 0, Color3.new(0.145098, 0.133333, 0.392157), true, true)
+	local ShowValue = MakeText(MainButton1, UDim2.new(0, 59,0, 25), UDim2.new(0.734, 0,0.687, 0), 1, Color3.new(0.466667, 0.286275, 1), true, ValueNow)	
+	local SlideBar = MakeFrame(MainButton1, UDim2.new(0, 222,0, 8), UDim2.new(0.065, 0,0.439, 0), 0, Color3.new(0.494118, 0.258824, 1), true, true)
+	local Bar = MakeFrame(SlideBar, UDim2.new(0, 13,0, 22), UDim2.new(0.605, 0,-1, 0), 0, Color3.new(0.407843, 0.113725, 1), true, true)
+	local ResetButton = MakeImageButton(MainButton1, UDim2.new(0, 28,0, 28), UDim2.new(0.86, 0,0.053, 0), 1, Color3.new(0.580392, 0.388235, 1), 0, "rbxassetid://438217404")
+	ResetButton.Activated:Connect(function()
+		ResetButton.ImageColor3 = Color3.new(1, 1, 1)
+		ResetButton.Rotation = 0
+		tweenButtonColor(ResetButton, Color3.new(0.580392, 0.388235, 1), 0.7, true)		
+		rotateImageButton(ResetButton, 0.7)
+	end)	
+	MainButton1.Visible = false
+	wait()
+	ColorMainButton1.Name = "Toggle_" .. Name
+	MainButton1.Parent = Parent
+	MainButton1.Visible = true
+	return SlideBar, Bar, TextBox, ShowValue, ColorMainButton1, ResetButton
+end
+
+local function matchesAllowedKeyword(value, allowedKeywords)
+	value = value:lower()
+	for _, keyword in ipairs(allowedKeywords) do
+		if string.find(value, keyword:lower()) then
+			return true
+		end
+	end
+	return false
+end
+
+local Summer_Fruit_Teble = {"Carrot", "Strawberry", "Blueberry", "Tomato", "Cauliflower" ,"Watermalon", "Rafflesia", "Green Apple", "Avocado", "Banana", "Pineapple"
+	, "Kiwi", "Bell Pepper", "Prickly Pear", "Loquat", "Feijoa", "Pitcher Plant", "Sugar Apple"}
+
+---------------- **** ModePlayer_SelectFuntion ****
+
+local ModePlayer1 = Create_Line(ModePlayer_SelectFuntion, "การเคลื่อนไหว")
+
+local WalkSpeed = 16 ; local Defalse_WalkSpeed = 16
+local PlayerSpeed_SlideBar, PlayerSpeed_Bar, PlayerSpeed_TextBox, PlayerSpeed_ShowValue, PlayerSpeed_Color, PlayerSpeed_ResetButton = Create_Slide_Textbox(ModePlayer_SelectFuntion, "ความเร็วการเดิน", "ใส่ค่าที่ต้องการเลยครับ", WalkSpeed)
+local function SetSlider(Bar, Slide, Defalse_Value, Color)
+	local slider_WalkSpeed = createSlider(Bar, Slide, function(value)
+		WalkSpeed = value
+		PlayerSpeed_TextBox.Text = ""
+	end, 150)
+	slider_WalkSpeed.SetValue(WalkSpeed)
+	PlayerSpeed_TextBox.FocusLost:Connect(function(enterPressed)
+		local text = PlayerSpeed_TextBox.Text
+		local number = tonumber(text)
+		if number then
+			WalkSpeed = number
+			slider_WalkSpeed.SetValue(number)
+		else
+			PlayerSpeed_TextBox.Text = ""
+		end
+	end)
+	PlayerSpeed_ResetButton.Activated:Connect(function()
+		WalkSpeed = Defalse_WalkSpeed
+		slider_WalkSpeed.SetValue(Defalse_WalkSpeed)
+	end)	
+	task.spawn(function()
+		while wait(0.05) do
+			PlayerSpeed_ShowValue.Text = WalkSpeed
+			humanoid.WalkSpeed = WalkSpeed
+			if tonumber(PlayerSpeed_ShowValue.Text) == Defalse_Value then
+				tweenButtonColor(Color, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+			else
+				tweenButtonColor(Color, Color3.new(0.45098, 0, 1), 0.17)
+			end
+		end
+	end)
+end
+SetSlider(PlayerSpeed_SlideBar, PlayerSpeed_Bar, Defalse_WalkSpeed, PlayerSpeed_Color)
+
+local function convertJumpHeightToPower(jumpHeight)
+	local gravity = workspace.Gravity
+	return math.sqrt(2 * gravity * jumpHeight)
+end
+local JumpPower = 50 ; local Defalse_JumpPower = 50
+local JumpPower_SlideBar, JumpPower_Bar, JumpPower_TextBox, JumpPower_ShowValue, JumpPower_Color, JumpPower_ResetButton = Create_Slide_Textbox(ModePlayer_SelectFuntion, "พลังการกระโดด", "ใส่ค่าที่ต้องการเลยครับ", JumpPower)
+local function SetSlider2(Bar, Slide, Defalse_Value, Color)
+	local slider_JumpPower = createSlider(Bar, Slide, function(value)
+		JumpPower = value;	JumpPower_TextBox.Text = ""
+	end, 300)
+	slider_JumpPower.SetValue(JumpPower)
+	JumpPower_TextBox.FocusLost:Connect(function(enterPressed)
+		local text = JumpPower_TextBox.Text
+		local number = tonumber(text)
+		if number then
+			JumpPower = number
+			slider_JumpPower.SetValue(number)
+		else
+			JumpPower_TextBox.Text = ""
+		end
+	end)
+	JumpPower_ResetButton.Activated:Connect(function()
+		JumpPower = Defalse_JumpPower
+		slider_JumpPower.SetValue(Defalse_JumpPower)
+	end)
+	task.spawn(function()
+		while wait(0.05) do
+			JumpPower_ShowValue.Text = JumpPower
+			humanoid.JumpPower = JumpPower
+			humanoid.JumpHeight = convertJumpHeightToPower(JumpPower) / 15
+			if tonumber(JumpPower_ShowValue.Text) == Defalse_Value then
+				tweenButtonColor(Color, Color3.new(0.145098, 0.133333, 0.392157), 0.17)
+			else
+				tweenButtonColor(Color, Color3.new(0.45098, 0, 1), 0.17)
+			end
+		end
+	end)
+end
+SetSlider2(JumpPower_SlideBar, JumpPower_Bar, Defalse_JumpPower, JumpPower_Color)
+
+local Infinit_Jump_Button, Infinit_Jump_Text = Create_Toggle(ModePlayer_SelectFuntion, "กระโดดไม่จำกัด")
+local Infinit_Jump = false;Infinit_Jump_Button.Activated:Connect(function()
+	if Infinit_Jump == false then
+		Infinit_Jump = true
+	else
+		Infinit_Jump = false		
+	end	
+end)
+UIS.JumpRequest:Connect(function()
+	if Infinit_Jump == true then
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+
+---------------- **** ModeInterFace_SelectFuntion ****
+
+
+local InterFaceLine1 = Create_Line(ModeInterFace_SelectFuntion, "เปิดปุ่ม")
+
+local OpenTelePortGear_Button, OpenTelePortGear_Text = Create_Click(ModeInterFace_SelectFuntion, "เปิดปุ่มวาร์ปไปที่ซื้ออุปกรณ์ 🧰")
+OpenTelePortGear_Button.Activated:Connect(function()
+	local Teleport_Gear = player.PlayerGui:FindFirstChild("Teleport_UI"):FindFirstChild("Frame"):FindFirstChild("Gear")
+	if Teleport_Gear then
+		Teleport_Gear.Visible = true
+	end
+end)
+
+local OpenTelePortPets_Button, OpenTelePortPets_Text = Create_Click(ModeInterFace_SelectFuntion, "เปิดปุ่มวาร์ปไปที่ซื้อไข่ 🥚")
+OpenTelePortPets_Button.Activated:Connect(function()
+	local Teleport_Pets = player.PlayerGui:FindFirstChild("Teleport_UI"):FindFirstChild("Frame"):FindFirstChild("Pets")
+	if Teleport_Pets then
+		Teleport_Pets.Visible = true
+	end
+end)
+
+local InterFaceLine2 = Create_Line(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อของและอื่นๆ")
+
+local SeedShopGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อเมล็ด 🌱")
+SeedShopGUI_Button.Activated:Connect(function()
+	local GuiController = require(replicatedStorage.Modules.GuiController)
+	GuiController:Open(player.PlayerGui.Seed_Shop)
+end)
+
+local SeedGearGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้ออุปกรณ์ 🧰")
+SeedGearGUI_Button.Activated:Connect(function()
+	local GuiController = require(replicatedStorage.Modules.GuiController)
+	GuiController:Open(player.PlayerGui.Gear_Shop)
+end)
+
+local DailyQuestsGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าดูเควส 📜")
+DailyQuestsGUI_Button.Activated:Connect(function()
+	local GuiController = require(replicatedStorage.Modules.GuiController)
+	GuiController:Open(player.PlayerGui.DailyQuests_UI)
+end)
+
+local CosmeticShopGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อของตบแต่ง 💡")
+CosmeticShopGUI_Button.Activated:Connect(function()
+	local GuiController = require(replicatedStorage.Modules.GuiController)
+	GuiController:Open(player.PlayerGui.CosmeticShop_UI)
+end)
+
+local EventShopGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อของอีเว้นท์ ☀️ ")
+EventShopGUI_Button.Activated:Connect(function()
+	local GuiController = require(replicatedStorage.Modules.GuiController)
+	GuiController:Open(player.PlayerGui:WaitForChild("EventShop_UI"))
+end)
+
+local InterFaceLine3 = Create_Line(ModeInterFace_SelectFuntion, "ปิดหน้าต่าง")
+
+local Close_Notification_Button = Create_Toggle(ModeInterFace_SelectFuntion, "ปิดข้อความแจ้งเตือน")
+local Close_Notification = false;Close_Notification_Button.Activated:Connect(function()
+	local Top_Notification = plrGui:FindFirstChild("Top_Notification")
+	if Close_Notification == false then
+		Close_Notification = true	
+		Top_Notification.Enabled = false
+	else
+		Close_Notification = false
+		Top_Notification.Enabled = true
+	end	
+end)
+
+local InterFaceLine4 = Create_Line(ModeInterFace_SelectFuntion, "โชว์ราคาผลไม้")
+
+local FruitValueLow_Button = Create_Toggle(ModeInterFace_SelectFuntion, "โชว์แค่ช่องด้านล่าง")
+local FruitValueLow = false;FruitValueLow_Button.Activated:Connect(function()
+	if FruitValueLow == false then
+		FruitValueLow = true	
+	else
+		FruitValueLow = false
+		wait(1)
+		HideSellCost(Hotbars)
+	end	
+end)
+
+local FruitValueBackpack_Button = Create_Toggle(ModeInterFace_SelectFuntion, "โชว์ในกระเป๋า")
+local FruitValueBackpack = false;FruitValueBackpack_Button.Activated:Connect(function()
+	if FruitValueBackpack == false then
+		FruitValueBackpack = true	
+	else
+		FruitValueBackpack = false
+		wait(1)
+		HideSellCost(Inventory_Player)
+	end	
+end)
+
+---------------- **** ModeFarm_SelectFuntion ****
+
+local FarmLine1 = Create_Line(ModeFarm_SelectFuntion, "หมวดหมู่ฟาร์ม")
+
+local AutoFarm_Button, AutoFarm_Text = Create_Toggle(ModeFarm_SelectFuntion, "เก็บผลผลผลิตทั้งสวน")
+local AutoFarm = false;AutoFarm_Button.Activated:Connect(function()
+	if AutoFarm == false then
+		AutoFarm = true
+	else		
+		AutoFarm = false
+		Camera.CameraType = Enum.CameraType.Custom
+	end	
+end)
+
+local AutoSell_Button, AutoSell_Text = Create_Toggle(ModeFarm_SelectFuntion, "ขายออโต้")
+local AutoSell = false;local AutoSellOn = false;AutoSell_Button.Activated:Connect(function()
+	if AutoSell == false then
+		AutoSell = true
+	else		
+		AutoSell = false
+	end	
+end)
+
+local FarmLine2 = Create_Line(ModeFarm_SelectFuntion, "ปลูก")
+
+local Plant_Select_Porition = nil
+local Select_PoPlant_Button = Create_Click(ModeFarm_SelectFuntion, "บันทึกจุดปลุก")
+Select_PoPlant_Button.Activated:Connect(function()
+	Plant_Select_Porition = vector.create(HMNRT.Position.X, 0.13552704453468323, HMNRT.Position.Z)
+end)
+
+local AutoPlant_Button = Create_Toggle(ModeFarm_SelectFuntion, "ออโต้ปลูกจุดที่เลือก")
+local AutoPlant = false; AutoPlant_Button.Activated:Connect(function()
+	if Plant_Select_Porition ~= nil then
+		if AutoPlant == false then
+			AutoPlant = true
+		else		
+			AutoPlant = false
+		end	
+	end
+end)
+
+local AutoPlant_Random_Button = Create_Toggle(ModeFarm_SelectFuntion, "ออโต้ปลูก (สุ่ม)")
+local AutoPlant_Random = false; AutoPlant_Random_Button.Activated:Connect(function()
+	if AutoPlant_Random == false then
+		AutoPlant_Random = true
+	else		
+		AutoPlant_Random = false
+	end	
+end)
+
+local AutoPlant_NowPo_Button = Create_Toggle(ModeFarm_SelectFuntion, "ออโต้ปลูกจุ่ดที่ยืน")
+local AutoPlant_NowPo = false; AutoPlant_NowPo_Button.Activated:Connect(function()
+	if AutoPlant_NowPo == false then
+		AutoPlant_NowPo = true
+	else		
+		AutoPlant_NowPo = false
+	end	
+end)
+
+local Random_Far_AutoPlant = 5
+task.spawn(function()
+	local Plant_RE = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):FindFirstChild("Plant_RE")
+	while wait(0.01) do
+		if AutoPlant_Random == true then
+			if character:FindFirstChildOfClass("Tool") then
+				for _, SeedName in ipairs(Summer_Fruit_Teble) do
+					local Plant_args = {vector.create(HMNRT.Position.X + math.random(-Random_Far_AutoPlant,Random_Far_AutoPlant), 0.13552704453468323, HMNRT.Position.Z + math.random(-Random_Far_AutoPlant,Random_Far_AutoPlant)), SeedName}
+					Plant_RE:FireServer(unpack(Plant_args))
+					wait(0.001)
+				end
+			end
+		end
+		if AutoPlant == true and Plant_Select_Porition ~= nil then
+			if character:FindFirstChildOfClass("Tool") then
+				for _, SeedName in ipairs(Summer_Fruit_Teble) do
+					local Plant_args = {Plant_Select_Porition, SeedName}
+					Plant_RE:FireServer(unpack(Plant_args))
+					wait(0.001)
+				end
+			end
+		end	
+		if AutoPlant_NowPo == true then
+			if character:FindFirstChildOfClass("Tool") then
+				for _, SeedName in ipairs(Summer_Fruit_Teble) do
+					local Plant_args = {vector.create(HMNRT.Position.X, 0.13552704453468323, HMNRT.Position.Z), SeedName}
+					Plant_RE:FireServer(unpack(Plant_args))
+					wait(0.001)
+				end
+			end
+		end	
+	end
+end)
+
+---------------- **** ModeTeleport_SelectFuntion ****
+
+local TeleportLine1 = Create_Line(ModeTeleport_SelectFuntion, "สถานที่")
+
+local SeedShopTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดขายเมล็ด 🌱 ")
+SeedShopTelePort_Button.Activated:Connect(function()
+	HMNRT.CFrame = CFrame.new(86.5831146, 2.99999976, -27.0039825, -0.000889317715, -8.37702459e-08, -0.999999583, 1.19696943e-11, 1, -8.37702885e-08, 0.999999583, -8.64680896e-11, -0.000889317715)
+end)
+
+local SellTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดขายผลไม้ 🍍 ")
+SellTelePort_Button.Activated:Connect(function()
+	HMNRT.CFrame = CFrame.new(86.5899353, 2.99999976, 0.426799476, -0.00322710886, 8.88386111e-08, -0.999994814, -6.18547878e-12, 1, 8.88390872e-08, 0.999994814, 2.9287886e-10, -0.00322710886)
+end)
+
+local PetsTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดขายใข่สัตว์เลี้ยง 🐶 ")
+PetsTelePort_Button.Activated:Connect(function()
+	HMNRT.CFrame = CFrame.new(-280.301514, 2.99999976, 3.14274955, -0.00374122662, 4.63038496e-08, 0.999993026, 1.05966386e-07, 1, -4.59077292e-08, -0.999993026, 1.05793895e-07, -0.00374122662)
+end)
+
+local GearTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดขายอุปกรณ์ 🧰 ")
+GearTelePort_Button.Activated:Connect(function()
+	HMNRT.CFrame = CFrame.new(-284.172638, 2.99999976, -32.7624016, -0.000779807277, 4.28658922e-08, 0.999999702, -2.86251272e-08, 1, -4.28882281e-08, -0.999999702, -2.86585635e-08, -0.000779807277)
+end)
+
+local QuestSummerTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดทำเควส ☀️ ")
+QuestSummerTelePort_Button.Activated:Connect(function()
+	HMNRT.CFrame = CFrame.new(-104.460297, 4.40001249, -7.82466936, 0.999930263, -2.52070862e-08, -0.0118120117, 2.54438639e-08, 1, 1.98951966e-08, 0.0118120117, -2.01943529e-08, 0.999930263)
+end)
+
+local TeleportLine2 = Create_Line(ModeTeleport_SelectFuntion, "ผู้เล่น")
+
+local Drop_Player_Teleport, TeleList, ResetButton_Teleport_PlayerList = Create_SelectPick(ModeTeleport_SelectFuntion, "เลือกผู้เล่น", 4)
+
+local function Refersh_PlayerTeleList()
+	local Players = game:GetService("Players")
+	for _, Frame in ipairs(Drop_Player_Teleport:GetChildren()) do
+		if Frame:IsA("Frame") then
+			Frame:Destroy()
+		end
+		wait()
+	end	
+	for _, OtherPlayer in ipairs(Players:GetChildren()) do
+		if OtherPlayer.Character and OtherPlayer.Character ~= character then
+			local TeleButton = Create_Click_InSC(Drop_Player_Teleport, OtherPlayer.Name)			
+			TeleButton.Activated:Connect(function()
+				local Other_PlayerHMNRT = OtherPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if Other_PlayerHMNRT then
+					HMNRT.CFrame = Other_PlayerHMNRT.CFrame
+				end				
+			end)
+		end
+		wait()
+	end
+end
+
+Refersh_PlayerTeleList()
+ResetButton_Teleport_PlayerList.Activated:Connect(function()
+	Refersh_PlayerTeleList()
+end)
+
+task.spawn(function()----  Auto Refesh Teleport List
+	while wait(40) do
+		Refersh_PlayerTeleList()
+	end
+end)
+
+
+---------------- **** ModeBuy_SelectFuntion ****
+
+
+local BuyLine1 = Create_Line(ModeBuy_SelectFuntion, "ซื้อเมล็ดทั่วไป")
+
+local Drop_BuyFruit, FruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 4)
+
+for _, SeedName in ipairs(Summer_Fruit_Teble) do
+	local NewButton = Create_Toggle_InSC(Drop_BuyFruit, SeedName)
+	NewButton.Activated:Connect(function()
+		if FruitList:FindFirstChild(SeedName) then
+			FruitList:FindFirstChild(SeedName):Destroy()
+		else
+			local NewTag = Instance.new("RayValue", FruitList) ; NewTag.Name = SeedName
+		end
+	end)
+	wait()
+end
+task.spawn(function()
+	local BuySeedStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuySeedStock")
+	while wait(1) do
+		for _, Item_List_Buy in ipairs(FruitList:GetChildren()) do
+			for i=1,10 do
+				BuySeedStock:FireServer(Item_List_Buy.Name)
+				wait()
+			end
+			wait()
+		end
+	end
+end)
+
+local BuyLine2 = Create_Line(ModeBuy_SelectFuntion, "ซื้อของร้านฤดูร้อน")
+
+local Drop_BuyEventSummer, EventSummerList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+
+local Summer_Shop_Teble = {"Summer Seed Pack", "Delphinium", "Lily of the Valley"
+	, "Traveler's Fruit", "Mutation Spray Burnt" ,"Oasis Crate"
+	, "Oasis Egg", "Hamster"}
+
+for _, ItemShop in ipairs(Summer_Shop_Teble) do
+	local NewButton = Create_Toggle_InSC(Drop_BuyEventSummer, ItemShop)
+	NewButton.Activated:Connect(function()
+		if EventSummerList:FindFirstChild(ItemShop) then
+			EventSummerList:FindFirstChild(ItemShop):Destroy()
+		else
+			local NewTag = Instance.new("RayValue", EventSummerList) ; NewTag.Name = ItemShop
+		end
+	end)
+	wait()
+end
+task.spawn(function()
+	local BuyEventShopStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyEventShopStock")
+	while wait(1) do
+		for _, Item_List_Buy in ipairs(EventSummerList:GetChildren()) do
+			for i=1,10 do
+				BuyEventShopStock:FireServer(Item_List_Buy.Name)
+				wait()
+			end
+			wait()
+		end
+	end
+end)
+
+local BuyLine3 = Create_Line(ModeBuy_SelectFuntion, "ซื้ออุปกรณ์")
+
+local Drop_BuyGear, BuyGearList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+
+local Gear_Shop_Teble = {"Watering Can", "Trowel", "Recall Wrench"
+	, "Basic Sprinkler", "Advanced Sprinkler" ,"Godly Sprinkler"
+	, "Magnifying Glass", "Tanning Mirror", "Master Sprinkler"
+	, "Cleaning Spray", "Favorite Tool", "Harvest Tool", "Friendship Pot"}
+
+for _, ItemShop in ipairs(Gear_Shop_Teble) do
+	local NewButton = Create_Toggle_InSC(Drop_BuyGear, ItemShop)
+	NewButton.Activated:Connect(function()
+		if BuyGearList:FindFirstChild(ItemShop) then
+			BuyGearList:FindFirstChild(ItemShop):Destroy()
+		else
+			local NewTag = Instance.new("RayValue", BuyGearList) ; NewTag.Name = ItemShop
+		end
+	end)
+	wait()
+end
+task.spawn(function()
+	local BuyGearStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyGearStock")
+	while wait(1) do
+		for _, Item_List_Buy in ipairs(BuyGearList:GetChildren()) do
+			for i=1,10 do
+				BuyGearStock:FireServer(Item_List_Buy.Name)
+				wait()
+			end
+			wait()
+		end
+	end
+end)
+
+local BuyLine4 = Create_Line(ModeBuy_SelectFuntion, "ซื้อไข่")
+
+local Drop_BuyEgg, BuyEggList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+
+local Egg_Shop_Teble = {"Common Egg", "Common Summer Egg", "Rare Summer Egg"
+	, "Mythical Egg", "Paradise Egg" ,"Bee Egg"
+	, "Bug Egg"}
+
+for _, ItemShop in ipairs(Egg_Shop_Teble) do
+	local NewButton = Create_Toggle_InSC(Drop_BuyEgg, ItemShop)
+	NewButton.Activated:Connect(function()
+		if BuyEggList:FindFirstChild(ItemShop) then
+			BuyEggList:FindFirstChild(ItemShop):Destroy()
+		else
+			local NewTag = Instance.new("RayValue", BuyEggList) ; NewTag.Name = ItemShop
+		end
+	end)
+	wait()
+end
+task.spawn(function()
+	local BuyPetEgg = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyPetEgg")
+	local EggLocations = workspace:FindFirstChild("NPCS"):FindFirstChild("Pet Stand"):FindFirstChild("EggLocations")
+	while wait(1) do
+		for _, Item_List_Buy in ipairs(BuyEggList:GetChildren()) do
+			if EggLocations:FindFirstChild(Item_List_Buy.Name) then
+				for i=1,3 do
+					local Buy_args = {i}
+					BuyPetEgg:FireServer(unpack(Buy_args))
+					wait()
+				end
+			end
+			wait()
+		end
+	end
+end)
+
+local BuyLine5 = Create_Line(ModeBuy_SelectFuntion, "ซื้อของนักเดินทาง (บอลลูน)")
+
+local Drop_BuyBalloon, BuyBallooList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+
+local Balloon_Shop_Teble = {"Night Staff", "Mutation Spray Cloudtouched"}
+
+for _, ItemShop in ipairs(Balloon_Shop_Teble) do
+	local NewButton = Create_Toggle_InSC(Drop_BuyBalloon, ItemShop)
+	NewButton.Activated:Connect(function()
+		if BuyBallooList:FindFirstChild(ItemShop) then
+			BuyBallooList:FindFirstChild(ItemShop):Destroy()
+		else
+			local NewTag = Instance.new("RayValue", BuyBallooList) ; NewTag.Name = ItemShop
+		end
+	end)
+	wait()
+end
+task.spawn(function()
+	local BuyTravelingMerchantShopStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyTravelingMerchantShopStock")
+	while wait(1) do
+		for _, Item_List_Buy in ipairs(BuyBallooList:GetChildren()) do
+			for i=1,3 do
+				local Buy_args = {Item_List_Buy.Name}
+				BuyTravelingMerchantShopStock:FireServer(unpack(Buy_args))
+				wait()
+			end
+		end
+	end
+end)
+
+---------------- **** ModeEventSummer_SelectFuntion ****
+
+local EventSummerLine1 = Create_Line(ModeEventSummer_SelectFuntion, "ซัมเมอร์")
+
+local AutoQuest_Button = Create_Toggle(ModeEventSummer_SelectFuntion, " ออโต้ส่งเควส ☀️ ")
+local AutoQuest = false;AutoQuest_Button.Activated:Connect(function()
+	if AutoQuest == false then
+		AutoQuest = true
+	else		
+		AutoQuest = false
+	end	
+end)
+task.spawn(function()
+	local SummerHarvestRemoteEvent = replicatedStorage:WaitForChild("GameEvents"):FindFirstChild("SummerHarvestRemoteEvent")
+	while wait(1) do
+		if AutoQuest == true then
+			SummerHarvestRemoteEvent:FireServer("SubmitAllPlants")
+		end
+	end
+end)
+
+------- ***** Start Script Loop *****
+
+
+task.spawn(function()
+	while true do
+		if AutoSell == true then
+			AutoSellOn = true
+			wait(0.5)
+			local SellRemote = game:FindFirstChild("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("Sell_Inventory")
+			local originalCFrame = HMNRT.CFrame
+			HMNRT.CFrame = CFrame.new(86.5779037, 2.99999976, 0.426797211, 0.00171377498, 2.77265073e-08, -0.99999851, 1.29369128e-12, 1, 2.77265499e-08, 0.99999851, -4.88107575e-11, 0.00171377498)
+			wait(0.5)
+			SellRemote:FireServer()
+			wait(0.5)
+			AutoSellOn = false
+		end
+		if AutoFarm == true then
+			local ticktime = 0
+			repeat
+				ticktime = ticktime + 0.5
+				wait(0.5)
+			until AutoFarm == false or ticktime >= 10
+		end
+		wait(0.2)
+	end
+end)
+
+local function ScanFruit(Folder)
+	if AutoFarm == true and AutoSellOn == false then
+		Camera.CameraType = Enum.CameraType.Scriptable
+		local ProximityPrompt = Folder:FindFirstChildOfClass("ProximityPrompt")
+		HMNRT.CFrame = ProximityPrompt.Parent.CFrame
+		wait(0.02)
+		HMNRT.Anchored = true
+		wait(0.02)
+		fireproximityprompt(ProximityPrompt)
+		wait(0.02)
+		HMNRT.Anchored = false
+		wait(0.02)
+	end
+end
+
+task.spawn(function()
+	while wait(3) do
+		if AutoFarm == true then
+			if PlayerFarm then
+				local Important = PlayerFarm:FindFirstChild("Important")
+				if Important then				
+					local originalCFrame = HMNRT.CFrame
+					local Plants_Physical = Important:FindFirstChild("Plants_Physical")
+					if Plants_Physical then
+						for _, PlantModel in ipairs(Plants_Physical:GetChildren()) do
+							if PlantModel:IsA("Model") then
+								if PlantModel:FindFirstChild("Fruits") then
+									local Fruits = PlantModel:FindFirstChild("Fruits")
+									for _, FruitsModel in ipairs(Fruits:GetChildren()) do
+										for _, FruitsModelv2 in ipairs(FruitsModel:GetChildren()) do
+											if FruitsModelv2:IsA("BasePart") and FruitsModelv2:FindFirstChildOfClass("ProximityPrompt") then
+												ScanFruit(FruitsModelv2)
+											end
+										end
+									end
+								else
+									for _, FruitsModelv2 in ipairs(PlantModel:GetChildren()) do
+										if FruitsModelv2:IsA("BasePart") and FruitsModelv2:FindFirstChildOfClass("ProximityPrompt") then
+											ScanFruit(FruitsModelv2)
+										end
+									end
+								end
+							end
+						end
+						HMNRT.CFrame = originalCFrame
+						Camera.CameraType = Enum.CameraType.Custom
+					end
+				end
+			end
+		end
+	end
+end)
+
+
+task.spawn(function()
+	while true do
+		if FruitValueLow == true then
+			HideSellCost(Hotbars)			
+			wait()
+			ShowSellCost(Hotbars)
+		end	
+		wait(1.5)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		if FruitValueBackpack == true then
+			HideSellCost(Inventory_Player)
+			wait()
+			ShowSellCost(Inventory_Player)
+		end	
+		wait(3)
+	end
+end)
