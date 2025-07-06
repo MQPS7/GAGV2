@@ -699,8 +699,8 @@ local function matchesAllowedKeyword(value, allowedKeywords)
 	return false
 end
 
-local Summer_Fruit_Teble = {"Carrot", "Strawberry", "Blueberry", "Tomato", "Cauliflower" ,"Watermalon", "Rafflesia", "Green Apple", "Avocado", "Banana", "Pineapple"
-	, "Kiwi", "Bell Pepper", "Prickly Pear", "Loquat", "Feijoa", "Pitcher Plant", "Sugar Apple"}
+local Summer_Fruit_Teble = {"Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkikn", "Apple", "Bamboo", "Coconut", "Cactus", "Dragon Fruit", "Mango"
+	, "Grape" ,"Mushroom", "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple", "Burning Bud"}
 
 ---------------- **** ModePlayer_SelectFuntion ****
 
@@ -1080,38 +1080,6 @@ task.spawn(function()
 		for _, Item_List_Buy in ipairs(FruitList:GetChildren()) do
 			for i=1,10 do
 				BuySeedStock:FireServer(Item_List_Buy.Name)
-				wait()
-			end
-			wait()
-		end
-	end
-end)
-
-local BuyLine2 = Create_Line(ModeBuy_SelectFuntion, "ซื้อของร้านฤดูร้อน")
-
-local Drop_BuyEventSummer, EventSummerList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
-
-local Summer_Shop_Teble = {"Summer Seed Pack", "Delphinium", "Lily of the Valley"
-	, "Traveler's Fruit", "Mutation Spray Burnt" ,"Oasis Crate"
-	, "Oasis Egg", "Hamster"}
-
-for _, ItemShop in ipairs(Summer_Shop_Teble) do
-	local NewButton = Create_Toggle_InSC(Drop_BuyEventSummer, ItemShop)
-	NewButton.Activated:Connect(function()
-		if EventSummerList:FindFirstChild(ItemShop) then
-			EventSummerList:FindFirstChild(ItemShop):Destroy()
-		else
-			local NewTag = Instance.new("RayValue", EventSummerList) ; NewTag.Name = ItemShop
-		end
-	end)
-	wait()
-end
-task.spawn(function()
-	local BuyEventShopStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyEventShopStock")
-	while wait(1) do
-		for _, Item_List_Buy in ipairs(EventSummerList:GetChildren()) do
-			for i=1,10 do
-				BuyEventShopStock:FireServer(Item_List_Buy.Name)
 				wait()
 			end
 			wait()
