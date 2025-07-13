@@ -400,7 +400,7 @@ end)
 
 local IconFrame = MakeImageLabel(MainFrame, UDim2.new(0, 32,0, 31), UDim2.new(0.017, 0,0.013, 0), 1, Color3.new(0.435294, 0.109804, 1), 0, "rbxassetid://80019916158199")
 local TitleText = MakeText(MainFrame, UDim2.new(0, 112,0, 32), UDim2.new(0.118, 0,0.013, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "Somtank")
-local VersionText = MakeText(MainFrame, UDim2.new(0, 163,0, 20), UDim2.new(0.41, 0,0.054, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "V2.0.1")
+local VersionText = MakeText(MainFrame, UDim2.new(0, 163,0, 20), UDim2.new(0.41, 0,0.054, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "V0.0.1")
 local FOR_ICON = Instance.new("UIAspectRatioConstraint", IconFrame)
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 VersionText.TextXAlignment = Enum.TextXAlignment.Left
@@ -504,7 +504,7 @@ local ModeTeleport, ModeTeleport_SelectFuntion = Create_ModeButton(" เทเ�
 
 local ModeBuy, ModeBuy_SelectFuntion = Create_ModeButton(" ออโต้ซื้อ 💸 ")
 
-local ModeEventDino, ModeEventDino_SelectFuntion = Create_ModeButton(" อีเว้นท์ 🦕️ ")
+local ModeEventSummer, ModeEventSummer_SelectFuntion = Create_ModeButton(" อีเว้นท์ ☀️ ")
 
 
 ---- End!!
@@ -699,8 +699,8 @@ local function matchesAllowedKeyword(value, allowedKeywords)
 	return false
 end
 
-local Summer_Fruit_Teble = {"Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkikn", "Apple", "Bamboo", "Coconut", "Cactus", "Dragon Fruit", "Mango"
-	, "Grape" ,"Mushroom", "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple", "Burning Bud"}
+local Summer_Fruit_Teble = {"Carrot", "Strawberry", "Blueberry", "Tomato", "Cauliflower" ,"Watermalon", "Rafflesia", "Green Apple", "Avocado", "Banana", "Pineapple"
+	, "Kiwi", "Bell Pepper", "Prickly Pear", "Loquat", "Feijoa", "Pitcher Plant", "Sugar Apple"}
 
 ---------------- **** ModePlayer_SelectFuntion ****
 
@@ -844,10 +844,10 @@ CosmeticShopGUI_Button.Activated:Connect(function()
 	GuiController:Open(player.PlayerGui.CosmeticShop_UI)
 end)
 
-local DinoQuestsGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าดูเควสอีเว้นท์ 🦖️ ")
-DinoQuestsGUI_Button.Activated:Connect(function()
+local EventShopGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อของอีเว้นท์ ☀️ ")
+EventShopGUI_Button.Activated:Connect(function()
 	local GuiController = require(replicatedStorage.Modules.GuiController)
-	GuiController:Open(player.PlayerGui:WaitForChild("DinoQuests_UI"))
+	GuiController:Open(player.PlayerGui:WaitForChild("EventShop_UI"))
 end)
 
 local InterFaceLine3 = Create_Line(ModeInterFace_SelectFuntion, "ปิดหน้าต่าง")
@@ -1006,16 +1006,9 @@ GearTelePort_Button.Activated:Connect(function()
 	HMNRT.CFrame = CFrame.new(-284.172638, 2.99999976, -32.7624016, -0.000779807277, 4.28658922e-08, 0.999999702, -2.86251272e-08, 1, -4.28882281e-08, -0.999999702, -2.86585635e-08, -0.000779807277)
 end)
 
-local QuestSummerTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดทำเควส 🦕️ ")
-local CFrame1 = CFrame.new(-88.5479507, 3.80001187, -12.317915, -0.0332156196, 2.56902108e-08, 0.99944818, 1.61775766e-08, 1, -2.51667505e-08, -0.99944818, 1.53327218e-08, -0.0332156196)
-local CFrame2 = CFrame.new(-112.687408, 3.72001171, -20.3895054, 0.00634315517, -9.29910016e-09, -0.999979854, 1.39592586e-08, 1, -9.21073973e-09, 0.999979854, -1.39005527e-08, 0.00634315517)
+local QuestSummerTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดทำเควส ☀️ ")
 QuestSummerTelePort_Button.Activated:Connect(function()
-	local somtanktest = math.random(1,2)
-	if somtanktest == 1 then
-		HMNRT.CFrame = CFrame1
-	else
-		HMNRT.CFrame = CFrame2
-	end
+	HMNRT.CFrame = CFrame.new(-104.460297, 4.40001249, -7.82466936, 0.999930263, -2.52070862e-08, -0.0118120117, 2.54438639e-08, 1, 1.98951966e-08, 0.0118120117, -2.01943529e-08, 0.999930263)
 end)
 
 local TeleportLine2 = Create_Line(ModeTeleport_SelectFuntion, "ผู้เล่น")
@@ -1061,7 +1054,7 @@ end)
 
 local BuyLine1 = Create_Line(ModeBuy_SelectFuntion, "ซื้อเมล็ดทั่วไป")
 
-local Drop_BuyFruit, FruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 6)
+local Drop_BuyFruit, FruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 4)
 
 for _, SeedName in ipairs(Summer_Fruit_Teble) do
 	local NewButton = Create_Toggle_InSC(Drop_BuyFruit, SeedName)
@@ -1080,6 +1073,38 @@ task.spawn(function()
 		for _, Item_List_Buy in ipairs(FruitList:GetChildren()) do
 			for i=1,10 do
 				BuySeedStock:FireServer(Item_List_Buy.Name)
+				wait()
+			end
+			wait()
+		end
+	end
+end)
+
+local BuyLine2 = Create_Line(ModeBuy_SelectFuntion, "ซื้อของร้านฤดูร้อน")
+
+local Drop_BuyEventSummer, EventSummerList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+
+local Summer_Shop_Teble = {"Summer Seed Pack", "Delphinium", "Lily of the Valley"
+	, "Traveler's Fruit", "Mutation Spray Burnt" ,"Oasis Crate"
+	, "Oasis Egg", "Hamster"}
+
+for _, ItemShop in ipairs(Summer_Shop_Teble) do
+	local NewButton = Create_Toggle_InSC(Drop_BuyEventSummer, ItemShop)
+	NewButton.Activated:Connect(function()
+		if EventSummerList:FindFirstChild(ItemShop) then
+			EventSummerList:FindFirstChild(ItemShop):Destroy()
+		else
+			local NewTag = Instance.new("RayValue", EventSummerList) ; NewTag.Name = ItemShop
+		end
+	end)
+	wait()
+end
+task.spawn(function()
+	local BuyEventShopStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyEventShopStock")
+	while wait(1) do
+		for _, Item_List_Buy in ipairs(EventSummerList:GetChildren()) do
+			for i=1,10 do
+				BuyEventShopStock:FireServer(Item_List_Buy.Name)
 				wait()
 			end
 			wait()
@@ -1140,17 +1165,10 @@ for _, ItemShop in ipairs(Egg_Shop_Teble) do
 	wait()
 end
 task.spawn(function()
-	local BuyPetEgg = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyPetEgg")
-	local EggLocations = workspace:FindFirstChild("NPCS"):FindFirstChild("Pet Stand"):FindFirstChild("EggLocations")
-	while wait(1) do
+	local BuyPetEgg = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):FindFirstChild("BuyPetEgg")
+	while wait(10) do
 		for _, Item_List_Buy in ipairs(BuyEggList:GetChildren()) do
-			if EggLocations:FindFirstChild(Item_List_Buy.Name) then
-				for i=1,3 do
-					local Buy_args = {i}
-					BuyPetEgg:FireServer(unpack(Buy_args))
-					wait()
-				end
-			end
+			BuyPetEgg:FireServer(Item_List_Buy.Name)
 			wait()
 		end
 	end
@@ -1186,192 +1204,43 @@ task.spawn(function()
 	end
 end)
 
----------------- **** ModeEventDino_SelectFuntion ****
+---------------- **** ModeEventSummer_SelectFuntion ****
 
-local EventSummerLine1 = Create_Line(ModeEventDino_SelectFuntion, "ทำไข่ DNA")
+local EventSummerLine1 = Create_Line(ModeEventSummer_SelectFuntion, "Dino")
 
-local AutoCraftDNA_Button = Create_Toggle(ModeEventDino_SelectFuntion, " ออโต้ทำไข่ DNA️ ")
-local AutoCraftDNA = false;AutoCraftDNA_Button.Activated:Connect(function()
-	if AutoCraftDNA == false then
-		AutoCraftDNA = true
+local AutoQuest_Button = Create_Toggle(ModeEventSummer_SelectFuntion, " ออโต้ส่งเควสอัพเกรด ")
+local AutoQuest = false;AutoQuest_Button.Activated:Connect(function()
+	if AutoQuest == false then
+		AutoQuest = true
 	else		
-		AutoCraftDNA = false
+		AutoQuest = false
 	end	
-end)
-
-local Drop_Craft_Pets, Craft_PetsList, Craft_Dna_ReButton = Create_SelectPick(ModeEventDino_SelectFuntion, "เลือกสัตว์ที่จะนำไปคราฟ", 20)
-
-local player_Backpack = player:FindFirstChild("Backpack")
-
-local function Reset_Pets_ForCraft()
-	for _, Frame in ipairs(Drop_Craft_Pets:GetChildren()) do
-		if not Frame:IsA("UICorner") then
-			Frame:Destroy()
-		end
-	end
-	for _, Tool in ipairs(player_Backpack:GetChildren()) do
-		if matchesAllowedKeyword(Tool.Name, {"Age"}) then
-			local NewButton = Create_Toggle_InSC(Drop_Craft_Pets, Tool.Name)
-			NewButton.Activated:Connect(function()
-				if Craft_PetsList:FindFirstChild(Tool.Name) then
-					Craft_PetsList:FindFirstChild(Tool.Name):Destroy()
-				else
-					local NewTag = Instance.new("RayValue", Craft_PetsList) ; NewTag.Name = Tool.Name
-				end
-			end)
-			wait()
-		end
-	end
-end
-Reset_Pets_ForCraft()
-Craft_Dna_ReButton.Activated:Connect(function()
-	Reset_Pets_ForCraft()
 end)
 task.spawn(function()
-	local DinoMachineService_RE = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):FindFirstChild("DinoMachineService_RE")
-	while wait(5) do
-		if AutoCraftDNA == true then
-			local ClaimReward_args = {"ClaimReward"}
-			DinoMachineService_RE:FireServer(unpack(ClaimReward_args))
-			for _, Craft_Pets_List in ipairs(Craft_PetsList:GetChildren()) do
-				if player_Backpack:FindFirstChild(Craft_Pets_List.Name) then
-					local Selecet_This = player_Backpack:FindFirstChild(Craft_Pets_List.Name)
-					Selecet_This.Parent = character
-					wait(0.1)
-					local MachineInteract_args = {"MachineInteract"}
-					DinoMachineService_RE:FireServer(unpack(MachineInteract_args))
-					wait(0.1)
-					for _, items in ipairs(character:GetChildren()) do
-						if items:IsA("Tool") then
-							items.Parent = player_Backpack
-						end
-					end
-				end
-			end
-		end
-	end
-end)
-
-local EventSummerLine2 = Create_Line(ModeEventDino_SelectFuntion, "การคราฟของ")
-
-local CraftingGlobalObjectService = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):FindFirstChild("CraftingGlobalObjectService")
-
-local CraftingProximityPrompt = nil
-local DinoCraftingTable = workspace:FindFirstChild("Interaction"):FindFirstChild("UpdateItems"):FindFirstChild("DinoEvent"):FindFirstChild("DinoCraftingTable")
-repeat wait()
-	if DinoCraftingTable then
-		for _, Items in ipairs(DinoCraftingTable:GetDescendants()) do
-			if CraftingProximityPrompt == nil then
-				if Items.Name == "CraftingProximityPrompt" and Items:IsA("ProximityPrompt") then
-					CraftingProximityPrompt = Items
-					Items.ActionText = "Somtank Is on"
-				end
-			end
-		end
-	end
-until CraftingProximityPrompt ~= nil
-
-local Cancle_Craft = {"Cancel",workspace:WaitForChild("Interaction"):WaitForChild("UpdateItems"):WaitForChild("DinoEvent"):WaitForChild("DinoCraftingTable"),"DinoEventWorkbench"}
-
-local AutoCraft_AmberSpray_Button = Create_Toggle(ModeEventDino_SelectFuntion, " ออโต้คราฟสเปรย์อำพัน ")
-local AutoCraft_Anceint_Button = Create_Toggle(ModeEventDino_SelectFuntion, " ออโต้คราฟถุงเมล็ดไดโน ")
-local AutoCraft_DinoCrate_Button = Create_Toggle(ModeEventDino_SelectFuntion, " ออโต้คราฟกล่องไดโน ")
-local AutoCraft_AmberSpray = false;AutoCraft_AmberSpray_Button.Activated:Connect(function()
-	if AutoCraft_AmberSpray == false then
-		AutoCraft_AmberSpray = true
-		CraftingGlobalObjectService:FireServer(unpack(Cancle_Craft))--Cancle Craft
-	else		
-		AutoCraft_AmberSpray = false
-	end	
-end)
-local AutoCraft_Anceint = false;AutoCraft_Anceint_Button.Activated:Connect(function()
-	if AutoCraft_Anceint == false then
-		AutoCraft_Anceint = true
-		CraftingGlobalObjectService:FireServer(unpack(Cancle_Craft))--Cancle Craft
-	else		
-		AutoCraft_Anceint = false
-	end	
-end)
-local AutoCraft_DinoCrate = false;AutoCraft_DinoCrate_Button.Activated:Connect(function()
-	if AutoCraft_DinoCrate == false then
-		AutoCraft_DinoCrate = true
-		CraftingGlobalObjectService:FireServer(unpack(Cancle_Craft))--Cancle Craft
-	else		
-		AutoCraft_DinoCrate = false
-	end	
-end)
-
-task.spawn(function()
-	local CraftingGlobalObjectService_AmberSpray_args = {"SetRecipe",workspace:WaitForChild("Interaction"):WaitForChild("UpdateItems"):WaitForChild("DinoEvent"):WaitForChild("DinoCraftingTable"),"DinoEventWorkbench","Mutation Spray Amber"}
-	local CraftingGlobalObjectService_Anceint_args = {"SetRecipe",workspace:WaitForChild("Interaction"):WaitForChild("UpdateItems"):WaitForChild("DinoEvent"):WaitForChild("DinoCraftingTable"),"DinoEventWorkbench","Ancient Seed Pack"}
-	local CraftingGlobalObjectService_DinoCrate_args = {"SetRecipe",workspace:WaitForChild("Interaction"):WaitForChild("UpdateItems"):WaitForChild("DinoEvent"):WaitForChild("DinoCraftingTable"),"DinoEventWorkbench","Dino Crate"}
+	local DinoMachineService_RE = replicatedStorage:WaitForChild("GameEvents"):FindFirstChild("DinoMachineService_RE")
 	
-	local AmberSpray_Craft_Need = {"Cleaning Spray", "Dinosaur Egg"}
-	local Anceint_Craft_Need = {"Dinosaur Egg"}
-	local DinoCrate_Craft_Need = {"Dinosaur Egg"}
+	local Plant_Can = {"Stonebite", "Paradise Petal", "Horned Dinoshroom", "Boneboo"
+		, "Firefly Fern", "Fossilight", "Bone Blossom"}
 	
-	local Craft_Delay = 1
-	while wait(Craft_Delay) do
-		if CraftingProximityPrompt.Parent:FindFirstChild("CraftingBillboardGui") then
-			Craft_Delay = 10
-		else
-			Craft_Delay = 1
-		end
-		if AutoCraft_AmberSpray == true then
-			CraftingGlobalObjectService:FireServer(unpack(CraftingGlobalObjectService_AmberSpray_args))
-			wait(0.1)
-			for _, Items in ipairs(player_Backpack:GetChildren()) do
-				if matchesAllowedKeyword(Items.Name, AmberSpray_Craft_Need) then
-					Items.Parent = character
-					wait(0.5)
-					if character:FindFirstChildOfClass("Tool") then
-						fireproximityprompt(CraftingProximityPrompt)
-					end
-					wait(0.5)
-					if matchesAllowedKeyword(CraftingProximityPrompt.ActionText, {"Sheckles"}) then
-						fireproximityprompt(CraftingProximityPrompt)
-					end	
+	while wait(1) do
+		local Item = 0
+		
+		for _, item in ipairs(player.Backpack:GetChildren()) do
+			if matchesAllowedKeyword(item.Name, Plant_Can) then
+				if Item < 3 then
+					item.Parent = character
+					Item = Item + 1
 				end
 			end
 		end
-		if AutoCraft_Anceint == true then
-			CraftingGlobalObjectService:FireServer(unpack(CraftingGlobalObjectService_Anceint_args))
-			wait(0.1)
-			for _, Items in ipairs(player_Backpack:GetChildren()) do
-				if matchesAllowedKeyword(Items.Name, Anceint_Craft_Need) then
-					Items.Parent = character
-					wait(0.5)
-					if character:FindFirstChildOfClass("Tool") then
-						fireproximityprompt(CraftingProximityPrompt)
-					end
-					wait(0.5)
-					if matchesAllowedKeyword(CraftingProximityPrompt.ActionText, {"Sheckles"}) then
-						fireproximityprompt(CraftingProximityPrompt)
-					end	
-				end
+		
+		if AutoQuest == true then
+			if character:FindFirstChildOfClass("Tool") then
+				DinoMachineService_RE:FireServer("SubmitAllPlants")
 			end
 		end
-		if AutoCraft_DinoCrate == true then
-			CraftingGlobalObjectService:FireServer(unpack(CraftingGlobalObjectService_DinoCrate_args))
-			wait(0.1)
-			for _, Items in ipairs(player_Backpack:GetChildren()) do
-				if matchesAllowedKeyword(Items.Name, DinoCrate_Craft_Need) then
-					Items.Parent = character
-					wait(0.5)
-					if character:FindFirstChildOfClass("Tool") then
-						fireproximityprompt(CraftingProximityPrompt)
-					end
-					wait(0.5)
-					if matchesAllowedKeyword(CraftingProximityPrompt.ActionText, {"Sheckles"}) then
-						fireproximityprompt(CraftingProximityPrompt)
-					end	
-				end
-			end
-		end		
 	end
 end)
-
-
 
 ------- ***** Start Script Loop *****
 
@@ -1473,6 +1342,5 @@ task.spawn(function()
 		wait(3)
 	end
 end)
-
 
 
