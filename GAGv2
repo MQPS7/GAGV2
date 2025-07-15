@@ -1224,19 +1224,20 @@ task.spawn(function()
 	
 	while wait(1) do
 		local Item = 0
-		
-		for _, item in ipairs(player.Backpack:GetChildren()) do
-			if matchesAllowedKeyword(item.Name, Plant_Can) then
-				if Item < 3 then
-					item.Parent = character
-					Item = Item + 1
+		if AutoQuest == true then
+			for _, item in ipairs(player.Backpack:GetChildren()) do
+				if matchesAllowedKeyword(item.Name, Plant_Can) then
+					if Item < 3 then
+						item.Parent = character
+						Item = Item + 1
+					end
 				end
 			end
-		end
-		
-		if AutoQuest == true then
-			if character:FindFirstChildOfClass("Tool") then
-				DinoMachineService_RE:FireServer("SubmitAllPlants")
+
+			if AutoQuest == true then
+				if character:FindFirstChildOfClass("Tool") then
+					DinoMachineService_RE:FireServer("SubmitAllPlants")
+				end
 			end
 		end
 	end
