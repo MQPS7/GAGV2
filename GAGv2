@@ -1054,19 +1054,29 @@ end)
 
 local BuyLine1 = Create_Line(ModeBuy_SelectFuntion, "ซื้อเมล็ดทั่วไป")
 
-local Drop_BuyFruit, FruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 4)
+local Drop_BuyFruit, FruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 6)
 
-for _, SeedName in ipairs(Summer_Fruit_Teble) do
-	local NewButton = Create_Toggle_InSC(Drop_BuyFruit, SeedName)
-	NewButton.Activated:Connect(function()
-		if FruitList:FindFirstChild(SeedName) then
-			FruitList:FindFirstChild(SeedName):Destroy()
-		else
-			local NewTag = Instance.new("RayValue", FruitList) ; NewTag.Name = SeedName
+local ScrollingFrame_Seed_Shop = plrGui:WaitForChild("Seed_Shop"):WaitForChild("Frame"):WaitForChild("ScrollingFrame")
+
+if ScrollingFrame_Seed_Shop then
+	for _, Frame in ipairs(ScrollingFrame_Seed_Shop:GetChildren()) do
+		if Frame:FindFirstChild("Main_Frame") then
+			local SeedName = Frame:WaitForChild("Main_Frame").Seed_Text.Text
+			if SeedName then
+				local NewButton = Create_Toggle_InSC(Drop_BuyFruit, SeedName)
+				NewButton.Activated:Connect(function()
+					if FruitList:FindFirstChild(SeedName) then
+						FruitList:FindFirstChild(SeedName):Destroy()
+					else
+						local NewTag = Instance.new("RayValue", FruitList) ; NewTag.Name = SeedName
+					end
+				end)
+				wait()
+			end
 		end
-	end)
-	wait()
+	end
 end
+
 task.spawn(function()
 	local BuySeedStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuySeedStock")
 	while wait(1) do
