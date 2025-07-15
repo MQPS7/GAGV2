@@ -1097,6 +1097,7 @@ local Drop_BuyGear, BuyGearList = Create_SelectPick(ModeBuy_SelectFuntion, "เน€เ
 local Gear_Shop_Teble = {"Watering Can", "Trowel", "Recall Wrench"
 	, "Basic Sprinkler", "Advanced Sprinkler" ,"Godly Sprinkler"
 	, "Magnifying Glass", "Tanning Mirror", "Master Sprinkler"
+	, "Medium Toy", "Medium Treat", "Levelup Lollipop"
 	, "Cleaning Spray", "Favorite Tool", "Harvest Tool", "Friendship Pot"}
 
 for _, ItemShop in ipairs(Gear_Shop_Teble) do
@@ -1131,16 +1132,25 @@ local Egg_Shop_Teble = {"Common Egg", "Common Summer Egg", "Rare Summer Egg"
 	, "Mythical Egg", "Paradise Egg" ,"Bee Egg"
 	, "Bug Egg"}
 
-for _, ItemShop in ipairs(Egg_Shop_Teble) do
-	local NewButton = Create_Toggle_InSC(Drop_BuyEgg, ItemShop)
-	NewButton.Activated:Connect(function()
-		if BuyEggList:FindFirstChild(ItemShop) then
-			BuyEggList:FindFirstChild(ItemShop):Destroy()
-		else
-			local NewTag = Instance.new("RayValue", BuyEggList) ; NewTag.Name = ItemShop
+--game:GetService("Players").LocalPlayer.PlayerGui.PetShop_UI.Frame.ScrollingFrame["Bug Egg"].Main_Frame.Seed_Text
+
+local ScrollingFrame_PetShop_UI = plrGui:WaitForChild("PetShop_UI"):WaitForChild("Frame"):WaitForChild("ScrollingFrame")
+
+for _, ItemShop in ipairs(ScrollingFrame_PetShop_UI:GetChildren()) do
+	if ItemShop:FindFirstChild("Main_Frame") then
+		local SeedName = ItemShop:WaitForChild("Main_Frame").Seed_Text.Text
+		if SeedName then
+			local NewButton = Create_Toggle_InSC(Drop_BuyEgg, SeedName)
+			NewButton.Activated:Connect(function()
+				if BuyEggList:FindFirstChild(ItemShop) then
+					BuyEggList:FindFirstChild(ItemShop):Destroy()
+				else
+					local NewTag = Instance.new("RayValue", BuyEggList) ; NewTag.Name = ItemShop
+				end
+			end)
+			wait()
 		end
-	end)
-	wait()
+	end
 end
 task.spawn(function()
 	local BuyPetEgg = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):FindFirstChild("BuyPetEgg")
