@@ -1,5 +1,14 @@
-game:GetService("StarterGui"):SetCore("SendNotification", {
-	Title = "Get New",
-	Text = "Somtank Discord!",
-	Duration = 10
-})
+for i = 1 , 7 do
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "🍃 Get New",
+		Text = "Somtank Discord!🎐",
+		Duration = 6
+	})
+	wait(4)
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = "🍃 สคริปอัพเดท",
+		Text = "เอาสคริปใหม่ได้ที่ดิสคอร์ด🎐",
+		Duration = 6
+	})
+	wait(4)
+end
