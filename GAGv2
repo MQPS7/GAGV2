@@ -400,7 +400,7 @@ end)
 
 local IconFrame = MakeImageLabel(MainFrame, UDim2.new(0, 32,0, 31), UDim2.new(0.017, 0,0.013, 0), 1, Color3.new(0.435294, 0.109804, 1), 0, "rbxassetid://80019916158199")
 local TitleText = MakeText(MainFrame, UDim2.new(0, 112,0, 32), UDim2.new(0.118, 0,0.013, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "Somtank")
-local VersionText = MakeText(MainFrame, UDim2.new(0, 163,0, 20), UDim2.new(0.41, 0,0.054, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "V0.0.1")
+local VersionText = MakeText(MainFrame, UDim2.new(0, 163,0, 20), UDim2.new(0.41, 0,0.054, 0), 1, Color3.new(0.466667, 0.286275, 1), true, "V0.0.2")
 local FOR_ICON = Instance.new("UIAspectRatioConstraint", IconFrame)
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 VersionText.TextXAlignment = Enum.TextXAlignment.Left
@@ -504,7 +504,7 @@ local ModeTeleport, ModeTeleport_SelectFuntion = Create_ModeButton(" เทเ�
 
 local ModeBuy, ModeBuy_SelectFuntion = Create_ModeButton(" ออโต้ซื้อ 💸 ")
 
-local ModeEventSummer, ModeEventSummer_SelectFuntion = Create_ModeButton(" อีเว้นท์ ☀️ ")
+local ModeEventSummer, ModeEventSummer_SelectFuntion = Create_ModeButton(" อีเว้นท์ 🍃️ ")
 
 
 ---- End!!
@@ -844,7 +844,7 @@ CosmeticShopGUI_Button.Activated:Connect(function()
 	GuiController:Open(player.PlayerGui.CosmeticShop_UI)
 end)
 
-local EventShopGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อของอีเว้นท์ ☀️ ")
+local EventShopGUI_Button = Create_Click(ModeInterFace_SelectFuntion, "เปิดหน้าซื้อของอีเว้นท์ 🍃 ")
 EventShopGUI_Button.Activated:Connect(function()
 	local GuiController = require(replicatedStorage.Modules.GuiController)
 	GuiController:Open(player.PlayerGui:WaitForChild("EventShop_UI"))
@@ -1006,9 +1006,9 @@ GearTelePort_Button.Activated:Connect(function()
 	HMNRT.CFrame = CFrame.new(-284.172638, 2.99999976, -32.7624016, -0.000779807277, 4.28658922e-08, 0.999999702, -2.86251272e-08, 1, -4.28882281e-08, -0.999999702, -2.86585635e-08, -0.000779807277)
 end)
 
-local QuestSummerTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดทำเควส ☀️ ")
+local QuestSummerTelePort_Button = Create_Click(ModeTeleport_SelectFuntion, " จุดทำเควส 🍃 ")
 QuestSummerTelePort_Button.Activated:Connect(function()
-	HMNRT.CFrame = CFrame.new(-104.460297, 4.40001249, -7.82466936, 0.999930263, -2.52070862e-08, -0.0118120117, 2.54438639e-08, 1, 1.98951966e-08, 0.0118120117, -2.01943529e-08, 0.999930263)
+	HMNRT.CFrame = CFrame.new(-98.7810135, 4.3999157, -10.2800016, 0.0133226225, 3.49948301e-08, -0.999911249, 3.33209016e-10, 1, 3.50023761e-08, 0.999911249, -7.99502908e-10, 0.0133226225)
 end)
 
 local TeleportLine2 = Create_Line(ModeTeleport_SelectFuntion, "ผู้เล่น")
@@ -1054,8 +1054,8 @@ end)
 
 local BuyLine1 = Create_Line(ModeBuy_SelectFuntion, "ซื้อเมล็ดทั่วไป")
 
-local Drop_BuyFruit, FruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 6)
-
+local Drop_BuyFruit, FruitList, ReFruitList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกเมล็ดที่ต้องการ", 6)
+ReFruitList.Visible = false
 local ScrollingFrame_Seed_Shop = plrGui:WaitForChild("Seed_Shop"):WaitForChild("Frame"):WaitForChild("ScrollingFrame")
 
 if ScrollingFrame_Seed_Shop then
@@ -1092,8 +1092,8 @@ end)
 
 local BuyLine3 = Create_Line(ModeBuy_SelectFuntion, "ซื้ออุปกรณ์")
 
-local Drop_BuyGear, BuyGearList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
-
+local Drop_BuyGear, BuyGearList, ReGearList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+ReGearList.Visible = false
 local Gear_Shop_Teble = {"Watering Can", "Trowel", "Recall Wrench"
 	, "Basic Sprinkler", "Advanced Sprinkler" ,"Godly Sprinkler"
 	, "Magnifying Glass", "Tanning Mirror", "Master Sprinkler"
@@ -1126,8 +1126,8 @@ end)
 
 local BuyLine4 = Create_Line(ModeBuy_SelectFuntion, "ซื้อไข่")
 
-local Drop_BuyEgg, BuyEggList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
-
+local Drop_BuyEgg, BuyEggList, ReEggList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+ReEggList.Visible = false
 local Egg_Shop_Teble = {"Common Egg", "Common Summer Egg", "Rare Summer Egg"
 	, "Mythical Egg", "Paradise Egg" ,"Bee Egg"
 	, "Bug Egg"}
@@ -1162,41 +1162,45 @@ task.spawn(function()
 	end
 end)
 
-local BuyLine5 = Create_Line(ModeBuy_SelectFuntion, "ซื้อของนักเดินทาง (บอลลูน)")
+local BuyLine5 = Create_Line(ModeBuy_SelectFuntion, "ร้านค้าอีเว้นท์ ( ZEN🍃🧘 )")
 
-local Drop_BuyBalloon, BuyBallooList = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 4)
+local Drop_BuyZenShop, BuyZenShopList, ReZenShop = Create_SelectPick(ModeBuy_SelectFuntion, "เลือกของที่ต้องการซื้อ", 6)
+ReZenShop.Visible = false
+local ScrollingFrame_EventShop_UI = plrGui:WaitForChild("EventShop_UI"):WaitForChild("Frame"):WaitForChild("ScrollingFrame")
 
-local Balloon_Shop_Teble = {"Night Staff", "Mutation Spray Cloudtouched"}
-
-for _, ItemShop in ipairs(Balloon_Shop_Teble) do
-	local NewButton = Create_Toggle_InSC(Drop_BuyBalloon, ItemShop)
-	NewButton.Activated:Connect(function()
-		if BuyBallooList:FindFirstChild(ItemShop) then
-			BuyBallooList:FindFirstChild(ItemShop):Destroy()
-		else
-			local NewTag = Instance.new("RayValue", BuyBallooList) ; NewTag.Name = ItemShop
+for _, ItemShop in ipairs(ScrollingFrame_EventShop_UI:GetChildren()) do
+	if ItemShop:FindFirstChild("Main_Frame") then
+		local SeedName = ItemShop:WaitForChild("Main_Frame").Seed_Text.Text
+		if SeedName then
+			local NewButton = Create_Toggle_InSC(Drop_BuyZenShop, SeedName)
+			NewButton.Activated:Connect(function()
+				if BuyZenShopList:FindFirstChild(SeedName) then
+					BuyZenShopList:FindFirstChild(SeedName):Destroy()
+				else
+					local NewTag = Instance.new("RayValue", BuyZenShopList) ; NewTag.Name = SeedName
+				end
+			end)
+			wait()
 		end
-	end)
-	wait()
+	end
 end
+
 task.spawn(function()
-	local BuyTravelingMerchantShopStock = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("BuyTravelingMerchantShopStock")
+	local Unknow = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents"):FindFirstChild("")
 	while wait(1) do
-		for _, Item_List_Buy in ipairs(BuyBallooList:GetChildren()) do
-			for i=1,3 do
-				local Buy_args = {Item_List_Buy.Name}
-				BuyTravelingMerchantShopStock:FireServer(unpack(Buy_args))
-				wait()
-			end
+		for _, Item_List_Buy in ipairs(BuyZenShopList:GetChildren()) do
+			local Buy_args = {Item_List_Buy.Name}
+			Unknow:FireServer(unpack(Buy_args))
+			wait()
 		end
 	end
 end)
 
 ---------------- **** ModeEventSummer_SelectFuntion ****
 
-local EventSummerLine1 = Create_Line(ModeEventSummer_SelectFuntion, "Dino")
+local EventSummerLine1 = Create_Line(ModeEventSummer_SelectFuntion, "Zen Event 🧘")
 
-local AutoQuest_Button = Create_Toggle(ModeEventSummer_SelectFuntion, " ออโต้ส่งเควสอัพเกรด ")
+local AutoQuest_Button = Create_Toggle(ModeEventSummer_SelectFuntion, " ออโต้ส่งเควส")
 local AutoQuest = false;AutoQuest_Button.Activated:Connect(function()
 	if AutoQuest == false then
 		AutoQuest = true
@@ -1204,27 +1208,24 @@ local AutoQuest = false;AutoQuest_Button.Activated:Connect(function()
 		AutoQuest = false
 	end	
 end)
+--Tranquil
 task.spawn(function()
-	local DinoMachineService_RE = replicatedStorage:WaitForChild("GameEvents"):FindFirstChild("DinoMachineService_RE")
-	
-	local Plant_Can = {"Stonebite", "Paradise Petal", "Horned Dinoshroom", "Boneboo"
-		, "Firefly Fern", "Fossilight", "Bone Blossom"}
-	
+	local ZenQuestRemoteEvent = replicatedStorage:WaitForChild("GameEvents"):FindFirstChild("ZenQuestRemoteEvent")
+		
 	while wait(1) do
 		local Item = 0
 		if AutoQuest == true then
 			for _, item in ipairs(player.Backpack:GetChildren()) do
-				if matchesAllowedKeyword(item.Name, Plant_Can) then
+				if matchesAllowedKeyword(item.Name, {"Tranquil"}) then
 					if Item < 3 then
 						item.Parent = character
 						Item = Item + 1
 					end
 				end
 			end
-
 			if AutoQuest == true then
 				if character:FindFirstChildOfClass("Tool") then
-					DinoMachineService_RE:FireServer("SubmitAllPlants")
+					ZenQuestRemoteEvent:FireServer("SubmitAllPlants")
 				end
 			end
 		end
